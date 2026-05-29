@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+  <title>NovaTools — カラーコントラストチェッカー (WCAG対応)</title>
+  <meta name="description" content="前景色と背景色のコントラスト比を計算。WCAG 2.1レベルに準拠しているか確認できます。">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    body { background: radial-gradient(ellipse at 30% 40%, #0C0F17, #020408); min-height: 100vh; display: flex; align-items: center; justify-content: center; font-family: 'Inter', 'Noto Sans JP', sans-serif; padding: 1rem; }
+    .glass-card { max-width: 560px; width: 100%; background: rgba(12,18,28,0.58); backdrop-filter: blur(16px); border-radius: 3rem; padding: 2rem 1.5rem 1.8rem; box-shadow: 0 2px 8px rgba(0,0,0,0.1), 0 0 0 1px rgba(45,212,191,0.12); }
+    .home-link { display: inline-block; margin-bottom: 1rem; background: rgba(45,212,191,0.15); color: #8dcfc3; text-decoration: none; padding: 0.3rem 1rem; border-radius: 2rem; font-size: 0.8rem; transition: 0.2s; }
+    .home-link:hover { background: #2DD4BF; color: #e0f7f2; }
+    .brand { text-align: center; font-size: 1rem; font-weight: 500; background: linear-gradient(120deg,#b0f3e8,#5ee0d0); -webkit-background-clip: text; background-clip: text; color: transparent; margin-bottom: 1rem; }
+    .badge { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 2px; color: #7bd5e8; background: rgba(45,212,191,0.12); display: inline-block; padding: 0.2rem 1rem; border-radius: 3rem; margin: 0 auto 1rem; text-align: center; width: fit-content; }
+    .color-preview { display: flex; margin: 1rem 0; border-radius: 1rem; overflow: hidden; }
+    .preview-block { flex: 1; text-align: center; padding: 2rem 0.5rem; font-weight: bold; transition: 0.1s; }
+    .input-group { display: flex; gap: 0.5rem; margin-bottom: 1rem; flex-wrap: wrap; }
+    .input-group label { font-size: 0.7rem; color: #cbece6; flex:1; }
+    .input-group input { width: 100%; background: rgba(20,30,40,0.7); border: 1px solid rgba(45,212,191,0.4); border-radius: 2rem; padding: 0.5rem; color: #e0f7f2; }
+    .ratio-box { background: rgba(0,0,0,0.35); border-radius: 1.5rem; padding: 1rem; text-align: center; margin: 1rem 0; }
+    .ratio-value { font-size: 2rem; font-weight: 700; color: #e0f7f2; }
+    .wcag-status { font-size: 0.8rem; margin-top: 0.5rem; }
+    .pass { color: #7bdfc7; }
+    .fail { color: #ff9b7a; }
+    .footer-note { text-align: center; font-size: 0.6rem; opacity: 0.5; margin-top: 1rem; color: #8db3c0; }
+  </style>
+</head>
+<body>
+<div class="glass-card">
+  <a href="index.html" class="home-link">← ホームに戻る</a>
+  <div class="brand">✦ NOVATOOLS ✦</div>
+  <div class="badge">🎨 カラーコントラストチェッカー (WCAG)</div>
+  <div class="color-preview" id="previewArea">
+    <div class="preview-block" id="fgPreview" style="background:#ffffff;">前景色</div>
+    <div class="preview-block" id="bgPreview" style="background:#2DD4BF;">背景色</div>
+  </div>
+  <div class="input-group"><label>前景色 (HEX)<input type="color" id="fgColor" value="#ffffff"></label><label>背景色 (HEX)<input type="color" id="bgColor" value="#2DD4BF"></label></div>
+  <div class="ratio-box"><div class="ratio-value" id="contrastRatio">--:1</div><div class="wcag-status" id="wcagStatus"></div></div>
+  <div class="footer-note">WCAG 2.1 レベルAA: 通常テキストで4.5:1、大きなテキストで3:1以上が推奨</div>
+</div>
+<script>
+  function hexToRgb(hex) {
+    let h = hex.replace('#','');
+    if (h.length === 3) h = h.split('').map(c=>c+c).join('');
+    const r = parseInt(h.substring(0,2),16);
+    const g = parseInt(h.substring(2,4),16);
+    const b = parseInt(h.substring(4,6),16);
+    return [r,g,b];
+  }
+  function getLuminance(r,g,b) {
+    const [rs,gs,bs] = [r,g,b].map(v => {
+      const c = v/255;
+      return c <= 0.03928 ? c/12.92 : Math.pow((c+0.055)/1.055, 2.4);
+    });
+    return 0.2126*rs + 0.7152*gs + 0.0722*bs;
+  }
+  function getContrastRatio(l1,l2) {
+    const lighter = Math.max(l1,l2);
+    const darker = Math.min(l1,l2);
+    return (lighter + 0.05) / (darker + 0.05);
+  }
+  function updateContrast() {
+    const fgHex = document.getElementById('fgColor').value;
+    const bgHex = document.getElementById('bgColor').value;
+    const fgRgb = hexToRgb(fgHex);
+    const bgRgb = hexToRgb(bgHex);
+    const fgLum = getLuminance(fgRgb[0], fgRgb[1], fgRgb[2]);
+    const bgLum = getLuminance(bgRgb[0], bgRgb[1], bgRgb[2]);
+    const ratio = getContrastRatio(fgLum, bgLum);
+    document.getElementById('contrastRatio').innerText = ratio.toFixed(2) + ':1';
+    const ratioNum = ratio;
+    let status = '';
+    if (ratioNum >= 7) status = '✅ AAA (すべてのテキストで合格)';
+    else if (ratioNum >= 4.5) status = '✅ AA (通常テキスト合格)';
+    else if (ratioNum >= 3) status = '⚠️ AA (大きなテキストのみ合格)';
+    else status = '❌ 不合格 (コントラスト不足)';
+    document.getElementById('wcagStatus').innerHTML = status;
+    document.getElementById('fgPreview').style.backgroundColor = fgHex;
+    document.getElementById('fgPreview').style.color = bgHex;
+    document.getElementById('bgPreview').style.backgroundColor = bgHex;
+    document.getElementById('bgPreview').style.color = fgHex;
+  }
+  document.getElementById('fgColor').addEventListener('input', updateContrast);
+  document.getElementById('bgColor').addEventListener('input', updateContrast);
+  updateContrast();
+</script>
+</body>
+</html>

@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+  <title>NovaTools — 名前メーカー超拡張版 (豊富なバリエーション＋二つ名)</title>
+  <meta name="description" content="カテゴリ別に50種以上の名前からランダム生成。二つ名・称号付き、履歴・お気に入り保存。創作・ゲームに最適。">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    body { background: radial-gradient(ellipse at 30% 40%, #0C0F17, #020408); min-height: 100vh; display: flex; align-items: center; justify-content: center; font-family: 'Inter', 'Noto Sans JP', sans-serif; padding: 1rem; }
+    .glass-card { max-width: 800px; width: 100%; background: rgba(12,18,28,0.58); backdrop-filter: blur(16px); border-radius: 3rem; padding: 2rem 1.5rem 1.8rem; box-shadow: 0 2px 8px rgba(0,0,0,0.1), 0 0 0 1px rgba(45,212,191,0.12); }
+    .home-link { display: inline-block; margin-bottom: 1rem; background: rgba(45,212,191,0.15); color: #8dcfc3; text-decoration: none; padding: 0.3rem 1rem; border-radius: 2rem; font-size: 0.8rem; transition: 0.2s; }
+    .home-link:hover { background: #2DD4BF; color: #e0f7f2; }
+    .brand { text-align: center; font-size: 1rem; font-weight: 500; background: linear-gradient(120deg,#b0f3e8,#5ee0d0); -webkit-background-clip: text; background-clip: text; color: transparent; margin-bottom: 1rem; }
+    .badge { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 2px; color: #7bd5e8; background: rgba(45,212,191,0.12); display: inline-block; padding: 0.2rem 1rem; border-radius: 3rem; margin: 0 auto 1rem; text-align: center; width: fit-content; }
+    .name-display { background: rgba(0,0,0,0.45); border-radius: 2rem; padding: 1.2rem; text-align: center; margin: 1rem 0; }
+    .name-text { font-size: 1.8rem; font-weight: 700; color: #e0f7f2; word-break: break-word; }
+    .epithet-text { font-size: 1rem; color: #b3f0e6; margin-top: 0.3rem; }
+    .category-select { display: flex; justify-content: center; gap: 0.8rem; flex-wrap: wrap; margin: 1rem 0; }
+    .cat-btn { background: rgba(30,40,50,0.8); border: none; padding: 0.4rem 0.9rem; border-radius: 2rem; color: #e0f7f2; cursor: pointer; transition: 0.2s; font-size: 0.85rem; }
+    .cat-btn.active { background: #1A8C7A; }
+    .options { display: flex; flex-wrap: wrap; gap: 1rem; justify-content: center; margin: 1rem 0; align-items: center; }
+    .option-label { display: flex; align-items: center; gap: 0.3rem; font-size: 0.75rem; color: #cbece6; }
+    select { background: #2d5f66; border: none; border-radius: 2rem; padding: 0.3rem 0.6rem; color: white; }
+    .action-buttons { display: flex; gap: 0.8rem; justify-content: center; margin: 1rem 0; flex-wrap: wrap; }
+    .action-btn { background: #1A8C7A; border: none; padding: 0.5rem 1rem; border-radius: 2rem; color: white; cursor: pointer; }
+    .action-btn.secondary { background: #2d5f66; }
+    .section-title { font-size: 0.8rem; color: #b3f0e6; margin-top: 1rem; margin-bottom: 0.5rem; border-left: 3px solid #2DD4BF; padding-left: 0.5rem; }
+    .history-list, .favorite-list { background: rgba(0,0,0,0.25); border-radius: 1.5rem; padding: 0.5rem; max-height: 150px; overflow-y: auto; }
+    .history-item, .fav-item { background: rgba(45,212,191,0.1); border-radius: 2rem; padding: 0.3rem 0.8rem; margin: 0.3rem 0; display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; }
+    .history-name, .fav-name { cursor: pointer; flex: 1; color: #e0f7f2; }
+    .fav-del { background: none; border: none; color: #ff9b7a; cursor: pointer; font-size: 1rem; }
+    .footer-note { text-align: center; font-size: 0.6rem; opacity: 0.5; margin-top: 1rem; color: #8db3c0; }
+  </style>
+</head>
+<body>
+<div class="glass-card">
+  <a href="index.html" class="home-link">← ホームに戻る</a>
+  <div class="brand">✦ NOVATOOLS ✦</div>
+  <div class="badge">🎲 名前メーカー 超拡張版 (50種以上×二つ名)</div>
+  <div class="name-display">
+    <div class="name-text" id="generatedName">星野 蒼空</div>
+    <div class="epithet-text" id="epithetText"></div>
+  </div>
+  <div class="category-select">
+    <button class="cat-btn active" data-cat="fantasy">🏰 ファンタジー</button>
+    <button class="cat-btn" data-cat="japanese">🍁 和風</button>
+    <button class="cat-btn" data-cat="western">🌍 洋風</button>
+    <button class="cat-btn" data-cat="cyber">⚡ サイバー</button>
+    <button class="cat-btn" data-cat="myth">🏛️ 神話・伝説</button>
+  </div>
+  <div class="options">
+    <label class="option-label"><input type="checkbox" id="addEpithetCheckbox"> ✨ 二つ名を追加</label>
+    <label class="option-label">📏 名前の長さ: 
+      <select id="lengthFilter">
+        <option value="any">すべて</option>
+        <option value="short">短め (〜6文字)</option>
+        <option value="medium">普通 (7〜10文字)</option>
+        <option value="long">長め (11文字〜)</option>
+      </select>
+    </label>
+  </div>
+  <div class="action-buttons">
+    <button class="action-btn" id="generateBtn">🎲 名前を生成</button>
+    <button class="action-btn secondary" id="copyBtn">📋 コピー</button>
+    <button class="action-btn secondary" id="favoriteBtn">⭐ お気に入り保存</button>
+  </div>
+
+  <div class="section-title">📜 生成履歴 (クリックで再選択)</div>
+  <div class="history-list" id="historyList"></div>
+
+  <div class="section-title">❤️ お気に入りリスト</div>
+  <div class="favorite-list" id="favoriteList"></div>
+
+  <div class="footer-note">各カテゴリ50〜60種の名前データ | 二つ名はゲーム・創作向けにランダム付与</div>
+</div>
+
+<script>
+  // ----------------------------- 超拡張 名前データ (50~60種) -----------------------------
+  const nameData = {
+    fantasy: {
+      first: ["アルト", "エルフィン", "リューン", "シエラ", "ゼフィル", "ルナリア", "クラウス", "ミリア", "ソラリス", "フェルゼン", "アゼル", "カレン", "リリス", "ノエル", "フィオナ", "グレン", "セシリア", "ラルク", "ユイ", "オルフェ", "シリウス", "メル", "エスト", "リィン", "ファリス", "ヴァル", "エリーゼ", "ロイド", "ティア", "ゼロス", "クレア", "アルベール", "セシル", "ルカ", "イリス", "ガイア", "セレス", "ディオン", "オーリエ", "ミレイユ", "アドラ", "ベアトリクス", "クロード", "フレデリカ", "エルザ", "ジャンヌ", "オリヴィア", "エリオット", "レイナ", "シグルド"],
+      last: ["ウィンド", "フレイム", "ストーム", "ブライト", "シャドウ", "ムーンライト", "ドラゴン", "フェニックス", "オーク", "エルフ", "ミスト", "ブレイズ", "グレイス", "フォレスト", "アイス", "サンダー", "ローズ", "スカイ", "オーシャン", "クレスト", "ヴェール", "クロス", "シルバー", "ゴールド", "クリスタル", "アイアン", "スチール", "ブラッド", "ナイト", "ウィンター", "サマー", "オータム", "スプリング", "ダスク", "ドーン", "イクリプス", "ソウル", "ハート", "ストーン", "フェザー", "ウィング", "クロウ", "レイヴン", "ウルフ", "ベア", "ファルコン", "ホーク", "イーグル", "サーペント", "リザード"]
+    },
+    japanese: {
+      first: ["蒼空", "陽菜", "湊斗", "凛", "奏太", "葵", "結月", "颯真", "美咲", "遥斗", "桜", "蓮", "優希", "七海", "大輝", "莉子", "健太", "杏", "翔太", "詩音", "真綾", "龍之介", "琴美", "匠", "千夏", "悠真", "凛音", "湊", "楓", "柚希", "陽翔", "紬", "大和", "椿", "琥珀", "翡翠", "紫苑", "桔梗", "椿姫", "葵咲", "一輝", "永遠", "空", "海斗", "陸", "翼", "心愛", "愛梨", "桜子", "美月"],
+      last: ["佐藤", "鈴木", "高橋", "田中", "渡辺", "伊藤", "山本", "中村", "小林", "加藤", "吉田", "山田", "佐々木", "山口", "松本", "井上", "木村", "林", "石井", "清水", "阿部", "森", "池田", "橋本", "山下", "石川", "中島", "前田", "藤田", "後藤", "小野", "岡田", "宮崎", "長谷川", "近藤", "坂本", "遠藤", "青木", "藤井", "西村", "福田", "太田", "三浦", "岡本", "松井", "内田", "金子", "和田", "野村", "原田"]
+    },
+    western: {
+      first: ["James", "Emma", "Liam", "Olivia", "Noah", "Ava", "Ethan", "Sophia", "Lucas", "Mia", "Benjamin", "Charlotte", "Elijah", "Amelia", "Alexander", "Isabella", "William", "Evelyn", "Daniel", "Abigail", "Matthew", "Emily", "David", "Ella", "Joseph", "Grace", "Samuel", "Chloe", "Henry", "Victoria", "Jackson", "Madison", "Sebastian", "Luna", "Carter", "Harper", "Owen", "Lily", "Wyatt", "Zoey", "Dylan", "Penelope", "Luke", "Layla", "Gabriel", "Nora", "Anthony", "Ellie", "Isaac", "Aria"],
+      last: ["Smith", "Johnson", "Williams", "Brown", "Jones", "Garcia", "Miller", "Davis", "Rodriguez", "Martinez", "Wilson", "Anderson", "Taylor", "Thomas", "Moore", "Jackson", "Martin", "Lee", "White", "Harris", "Clark", "Lewis", "Robinson", "Walker", "Hall", "Allen", "Young", "King", "Wright", "Scott", "Torres", "Nguyen", "Hill", "Flores", "Green", "Adams", "Nelson", "Baker", "Rivera", "Campbell", "Mitchell", "Roberts", "Carter", "Phillips", "Evans", "Turner", "Parker", "Collins", "Edwards", "Stewart"]
+    },
+    cyber: {
+      first: ["Neo", "Zara", "Void", "Pixel", "Echo", "Nyx", "Kai", "Ryn", "Jax", "Vex", "Zero", "Nova", "Flux", "Byte", "Cipher", "Kernel", "Vector", "Matrix", "Phantom", "Synth", "Glitch", "Radar", "Fuse", "Link", "Proxy", "Circuit", "Data", "Logic", "Cache", "Ram", "Core", "Thread", "Loop", "Stack", "Queue", "Array", "String", "Char", "Float", "Double", "Integer", "Boolean", "Void", "Null", "Undef", "Promise", "Async", "Await", "Fetch", "Render"],
+      last: ["X", "Cipher", "Zero", "Byte", "Kernel", "Flux", "Neuron", "Vector", "Matrix", "Phantom", "Crypt", "Droid", "Net", "OS", "Bit", "Pixel", "Codex", "Stream", "Data", "Shell", "Root", "Daemon", "Spider", "Ghost", "Circuit", "Logic", "Cache", "Ram", "Core", "Thread", "Loop", "Stack", "Queue", "Array", "String", "Char", "Float", "Double", "Integer", "Boolean", "Void", "Null", "Undef", "Promise", "Async", "Await", "Fetch", "Render", "Compiler", "Interpreter"]
+    },
+    myth: {
+      first: ["ゼウス", "オーディン", "トール", "ロキ", "アテナ", "アポロン", "アルテミス", "ヘラクレス", "ペルセウス", "オルフェウス", "イザナギ", "イザナミ", "アマテラス", "スサノオ", "ツクヨミ", "ラーの目", "アヌビス", "ホルス", "イシス", "オシリス", "ギルガメッシュ", "エンキドゥ", "ククリカン", "ウィツィロポチトリ", "フェンリル", "ヨルムンガンド", "スレイプニル", "ケルベロス", "ヒュドラ", "キメラ", "ペガサス", "ユニコーン", "ドラゴン", "ワイバーン", "フェニックス", "サラマンダー", "ウンディーネ", "シルフ", "ノーム", "エルフ", "ドワーフ", "ゴブリン", "オーガ", "トロール", "タイタン", "ギガース", "サイクロプス", "ハーピー", "メデューサ", "ミノタウロス"],
+      last: ["神", "の怒り", "の雷光", "の牙", "の翼", "の影", "の眼", "の盾", "の剣", "の鎚", "の鎖", "の炎", "の氷", "の風", "の大地", "の海", "の空", "の星", "の月", "の太陽", "の時", "の運命", "の知恵", "の力", "の勇気", "の希望", "の絶望", "の闇", "の光", "の終焉", "の始まり", "の黄昏", "の黎明", "の波動", "の律動", "の旋律", "の詩", "の物語", "の約束", "の記憶", "の夢", "の幻", "の真実", "の嘘", "の愛", "の憎しみ", "の悲しみ", "の喜び", "の平和", "の混沌"]
+    }
+  };
+
+  // 二つ名リスト (全カテゴリ共通)
+  const epithets = [
+    "「風を裂く者」", "「雷鳴の申し子」", "「影を統べる者」", "「光の守護者」", "「闇の狩人」", "「炎の巫女」", "「氷の魔女」", "「大地の巨人」", "「海の歌姫」", "「空の勇者」",
+    "「運命の紡ぎ手」", "「時を超えし者」", "「知識の探求者」", "「鋼の戦士」", "「銀の騎士」", "「黄金の王」", "「翠の射手」", "「紫の賢者」", "「紅の剣士」", "「蒼の聖女」",
+    "「不死鳥の如く」", "「狼と共に歩む」", "「竜と語りし者」", "「月に抱かれし者」", "「星を継ぐ者」", "「夢を紡ぐ者」", "「希望の灯火」", "「絶望の種火」", "「平和の象徴」", "「混沌の申し子」"
+  ];
+
+  let currentCategory = "fantasy";
+  let history = [];
+  let favorites = [];
+  let currentName = "";
+  let currentEpithet = "";
+
+  // localStorage
+  function loadStorage() {
+    const storedHistory = localStorage.getItem('nova_name_history_v2');
+    if (storedHistory) history = JSON.parse(storedHistory);
+    const storedFav = localStorage.getItem('nova_name_favorites_v2');
+    if (storedFav) favorites = JSON.parse(storedFav);
+    renderHistory();
+    renderFavorites();
+  }
+  function saveHistory() { localStorage.setItem('nova_name_history_v2', JSON.stringify(history.slice(0, 30))); }
+  function saveFavorites() { localStorage.setItem('nova_name_favorites_v2', JSON.stringify(favorites)); }
+
+  // 名前生成 (長さフィルタ対応)
+  function generateName() {
+    const data = nameData[currentCategory];
+    let firstList = [...data.first];
+    let lastList = [...data.last];
+    const lengthFilter = document.getElementById('lengthFilter').value;
+    if (lengthFilter !== 'any') {
+      if (lengthFilter === 'short') {
+        firstList = firstList.filter(n => n.length <= 6);
+        lastList = lastList.filter(n => n.length <= 6);
+      } else if (lengthFilter === 'medium') {
+        firstList = firstList.filter(n => n.length >= 7 && n.length <= 10);
+        lastList = lastList.filter(n => n.length >= 7 && n.length <= 10);
+      } else if (lengthFilter === 'long') {
+        firstList = firstList.filter(n => n.length >= 11);
+        lastList = lastList.filter(n => n.length >= 11);
+      }
+      if (firstList.length === 0) firstList = data.first;
+      if (lastList.length === 0) lastList = data.last;
+    }
+    const first = firstList[Math.floor(Math.random() * firstList.length)];
+    const last = lastList[Math.floor(Math.random() * lastList.length)];
+    let name = "";
+    if (currentCategory === "japanese") {
+      name = last + " " + first;
+    } else if (currentCategory === "western") {
+      name = first + " " + last;
+    } else {
+      name = first + "・" + last;
+    }
+    currentName = name;
+    // 二つ名
+    const addEpithet = document.getElementById('addEpithetCheckbox').checked;
+    if (addEpithet) {
+      currentEpithet = epithets[Math.floor(Math.random() * epithets.length)];
+      document.getElementById('epithetText').innerText = currentEpithet;
+    } else {
+      currentEpithet = "";
+      document.getElementById('epithetText').innerText = "";
+    }
+    document.getElementById("generatedName").innerText = name;
+    // 履歴追加
+    const fullName = addEpithet ? `${name} ${currentEpithet}` : name;
+    history.unshift({ name: fullName, category: currentCategory, timestamp: Date.now() });
+    if (history.length > 30) history.pop();
+    saveHistory();
+    renderHistory();
+    return { name, epithet: currentEpithet, full: fullName };
+  }
+
+  function renderHistory() {
+    const container = document.getElementById("historyList");
+    if (history.length === 0) { container.innerHTML = '<div style="color:#8db3c0; text-align:center;">履歴はまだありません</div>'; return; }
+    container.innerHTML = history.map((item, idx) => `<div class="history-item" data-name="${item.name.replace(/"/g, '&quot;')}" data-category="${item.category}"><span class="history-name">${item.name}</span><span style="font-size:0.6rem; color:#7bd5e8;">${item.category}</span></div>`).join('');
+    document.querySelectorAll('.history-item').forEach(el => {
+      el.addEventListener('click', (e) => {
+        const name = el.getAttribute('data-name');
+        const cat = el.getAttribute('data-category');
+        if (name) {
+          document.getElementById("generatedName").innerText = name.split(' ')[0];
+          if (name.includes('「')) {
+            const epithetMatch = name.match(/「[^」]+」/);
+            if (epithetMatch) document.getElementById('epithetText').innerText = epithetMatch[0];
+            else document.getElementById('epithetText').innerText = "";
+          } else {
+            document.getElementById('epithetText').innerText = "";
+          }
+          if (cat && nameData[cat]) {
+            currentCategory = cat;
+            document.querySelectorAll('.cat-btn').forEach(btn => {
+              if (btn.getAttribute('data-cat') === cat) btn.classList.add('active');
+              else btn.classList.remove('active');
+            });
+          }
+        }
+      });
+    });
+  }
+
+  function renderFavorites() {
+    const container = document.getElementById("favoriteList");
+    if (favorites.length === 0) { container.innerHTML = '<div style="color:#8db3c0; text-align:center;">お気に入りはまだありません</div>'; return; }
+    container.innerHTML = favorites.map((item, idx) => `<div class="fav-item" data-name="${item.name.replace(/"/g, '&quot;')}" data-category="${item.category}"><span class="fav-name">${item.name}</span><button class="fav-del" data-idx="${idx}">🗑️</button></div>`).join('');
+    document.querySelectorAll('.fav-name').forEach(el => {
+      el.addEventListener('click', (e) => {
+        const parent = el.closest('.fav-item');
+        const name = parent.getAttribute('data-name');
+        const cat = parent.getAttribute('data-category');
+        if (name) {
+          document.getElementById("generatedName").innerText = name.split(' ')[0];
+          if (name.includes('「')) {
+            const epithetMatch = name.match(/「[^」]+」/);
+            if (epithetMatch) document.getElementById('epithetText').innerText = epithetMatch[0];
+            else document.getElementById('epithetText').innerText = "";
+          } else {
+            document.getElementById('epithetText').innerText = "";
+          }
+          if (cat && nameData[cat]) {
+            currentCategory = cat;
+            document.querySelectorAll('.cat-btn').forEach(btn => {
+              if (btn.getAttribute('data-cat') === cat) btn.classList.add('active');
+              else btn.classList.remove('active');
+            });
+          }
+        }
+      });
+    });
+    document.querySelectorAll('.fav-del').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const idx = parseInt(btn.getAttribute('data-idx'));
+        favorites.splice(idx, 1);
+        saveFavorites();
+        renderFavorites();
+      });
+    });
+  }
+
+  function addToFavorites() {
+    const name = document.getElementById("generatedName").innerText;
+    const epithet = document.getElementById("epithetText").innerText;
+    const fullName = epithet ? `${name} ${epithet}` : name;
+    if (favorites.some(fav => fav.name === fullName)) { alert("すでにお気に入りです"); return; }
+    favorites.push({ name: fullName, category: currentCategory });
+    saveFavorites();
+    renderFavorites();
+  }
+
+  async function copyName() {
+    const name = document.getElementById("generatedName").innerText;
+    const epithet = document.getElementById("epithetText").innerText;
+    const full = epithet ? `${name} ${epithet}` : name;
+    await navigator.clipboard.writeText(full);
+    alert("コピーしました");
+  }
+
+  function setCategory(cat) {
+    currentCategory = cat;
+    generateName();
+  }
+
+  // イベント
+  document.getElementById("generateBtn").addEventListener("click", generateName);
+  document.getElementById("copyBtn").addEventListener("click", copyName);
+  document.getElementById("favoriteBtn").addEventListener("click", addToFavorites);
+  document.getElementById("addEpithetCheckbox").addEventListener("change", generateName);
+  document.getElementById("lengthFilter").addEventListener("change", generateName);
+  document.querySelectorAll(".cat-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll(".cat-btn").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      setCategory(btn.getAttribute("data-cat"));
+    });
+  });
+
+  loadStorage();
+  generateName();
+</script>
+</body>
+</html>

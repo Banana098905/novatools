@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+  <title>NovaTools — AI要約 (テキスト要約ツール)</title>
+  <meta name="description" content="長いテキストも1クリックで要約。レポート・記事・メモを瞬時に短く。無料・ログイン不要。">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600&family=Noto+Sans+JP:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    body { background: radial-gradient(ellipse at 30% 40%, #0C0F17, #020408); min-height: 100vh; display: flex; align-items: center; justify-content: center; font-family: 'Inter', 'Noto Sans JP', sans-serif; padding: 1rem; }
+    .glass-card { max-width: 680px; width: 100%; background: rgba(12,18,28,0.58); backdrop-filter: blur(16px); border-radius: 3rem; padding: 2rem 1.5rem 1.8rem; box-shadow: 0 2px 8px rgba(0,0,0,0.1), 0 0 0 1px rgba(45,212,191,0.12); }
+    .home-link { display: inline-block; margin-bottom: 1rem; background: rgba(45,212,191,0.15); color: #8dcfc3; text-decoration: none; padding: 0.3rem 1rem; border-radius: 2rem; font-size: 0.8rem; transition: 0.2s; }
+    .home-link:hover { background: #2DD4BF; color: #e0f7f2; }
+    .brand { text-align: center; font-size: 1rem; font-weight: 500; background: linear-gradient(120deg,#b0f3e8,#5ee0d0); -webkit-background-clip: text; background-clip: text; color: transparent; margin-bottom: 1rem; }
+    .badge { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 2px; color: #7bd5e8; background: rgba(45,212,191,0.12); display: inline-block; padding: 0.2rem 1rem; border-radius: 3rem; margin: 0 auto 1.2rem; text-align: center; width: fit-content; }
+    textarea { width: 100%; background: rgba(20,30,40,0.7); border: 1px solid rgba(45,212,191,0.4); border-radius: 1.5rem; padding: 1rem; font-size: 0.9rem; color: #e0f7f2; resize: vertical; margin-bottom: 1rem; }
+    .length-control { background: rgba(0,0,0,0.3); border-radius: 2rem; padding: 0.8rem 1rem; margin: 1rem 0; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.8rem; color: #cbece6; }
+    .summarize-btn { background: #1A8C7A; width: 100%; padding: 0.9rem; border-radius: 3rem; font-size: 1rem; font-weight: 600; color: white; cursor: pointer; margin: 0.5rem 0; border: none; }
+    .result-area { margin-top: 1.5rem; background: rgba(0,0,0,0.35); border-radius: 1.5rem; padding: 1rem; border-left: 3px solid #2DD4BF; }
+    .summary-text { color: #e2f3ef; font-size: 0.9rem; line-height: 1.5; }
+    .footer-note { text-align: center; font-size: 0.6rem; opacity: 0.5; margin-top: 1rem; color: #8db3c0; }
+    button:active { transform: scale(0.97); }
+  </style>
+</head>
+<body>
+<div class="glass-card">
+  <a href="index.html" class="home-link">← ホームに戻る</a>
+  <div class="brand">✦ NOVATOOLS ✦</div>
+  <div class="badge">🤖 AIテキスト要約</div>
+  <textarea id="inputText" rows="6" placeholder="例：今日は天気が良かったので公園に行きました。"></textarea>
+  <div class="length-control"><span>📏 要約の長さ</span><input type="range" id="summaryRatio" min="10" max="70" value="30" step="5"><span id="ratioValue">30%</span></div>
+  <button class="summarize-btn" id="summarizeBtn">✨ 要約する</button>
+  <div class="result-area"><div id="summaryOutput" class="summary-text">テキストを入力して「要約する」を押してください</div></div>
+  <div class="footer-note">※ 文単位で重要なセンテンスを抽出 (高速・軽量)</div>
+</div>
+<script>
+  function splitSentences(t){return t.split(/(?<=[。！？．\.\!\?])\s*/).filter(s=>s.trim().length>5);}
+  function tokenize(t){return t.replace(/[、。！？「」『』【】（）]/g,' ').split(/\s+/).filter(w=>w.length>0&&!/^[0-9]+$/.test(w));}
+  function summarize(text,ratio){
+    if(!text.trim()) return "⚠️ テキストが入力されていません。";
+    if(text.length>5000) text=text.slice(0,5000);
+    let sentences=splitSentences(text);
+    if(sentences.length<=3) return text.trim();
+    let freq=new Map();
+    for(let s of sentences){let w=tokenize(s); for(let t of w)freq.set(t.toLowerCase(),(freq.get(t.toLowerCase())||0)+1);}
+    let scored=sentences.map((s,i)=>{let w=tokenize(s); let score=0; for(let t of w)score+=freq.get(t.toLowerCase())||0; if(w.length)score/=Math.sqrt(w.length); if(i<sentences.length*0.3)score*=1.2; if(i>sentences.length*0.8)score*=0.9; return{idx:i,sentence:s,score};});
+    scored.sort((a,b)=>b.score-a.score);
+    let target=Math.max(1,Math.floor(sentences.length*ratio/100));
+    let selected=new Set(scored.slice(0,target).map(s=>s.idx));
+    let summary=Array.from(selected).sort((a,b)=>a-b).map(i=>sentences[i]).join('');
+    if(!summary.endsWith('。')&&!summary.endsWith('．')&&!summary.endsWith('.')) summary+='。';
+    return summary;
+  }
+  const input=document.getElementById('inputText'), ratio=document.getElementById('summaryRatio'), ratioVal=document.getElementById('ratioValue'), out=document.getElementById('summaryOutput');
+  ratio.addEventListener('input',()=>ratioVal.innerText=ratio.value+'%');
+  document.getElementById('summarizeBtn').onclick=()=>{out.innerText=summarize(input.value,parseInt(ratio.value));};
+  input.value="人工知能（AI）は現代のテクノロジーにおいて最も注目されている分野の一つです。機械学習や深層学習の進歩により、画像認識や自然言語処理の精度が飛躍的に向上しました。特に大規模言語モデルは、人間のように文章を生成したり要約したりすることが可能になっています。この技術はビジネスや教育、医療など様々な領域で応用されており、今後さらに発展すると予想されます。一方で倫理的な課題やプライバシーの問題も指摘されており、適切なガイドラインが求められています。";
+  document.getElementById('summarizeBtn').click();
+</script>
+</body>
+</html>

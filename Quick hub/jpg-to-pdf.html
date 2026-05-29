@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+  <title>NovaTools — JPG→PDF変換 (画像をPDFにまとめる)</title>
+  <meta name="description" content="複数の画像（JPG/PNG）を1つのPDFに変換。並び替え・用紙サイズ選択。無料・ログイン不要。">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600&family=Noto+Sans+JP:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    body { background: radial-gradient(ellipse at 30% 40%, #0C0F17, #020408); min-height: 100vh; display: flex; align-items: center; justify-content: center; font-family: 'Inter', 'Noto Sans JP', sans-serif; padding: 1rem; }
+    .glass-card { max-width: 780px; width: 100%; background: rgba(12,18,28,0.58); backdrop-filter: blur(16px); border-radius: 3rem; padding: 2rem 1.5rem 1.8rem; box-shadow: 0 2px 8px rgba(0,0,0,0.1), 0 0 0 1px rgba(45,212,191,0.12); }
+    .home-link { display: inline-block; margin-bottom: 1rem; background: rgba(45,212,191,0.15); color: #8dcfc3; text-decoration: none; padding: 0.3rem 1rem; border-radius: 2rem; font-size: 0.8rem; transition: 0.2s; }
+    .home-link:hover { background: #2DD4BF; color: #e0f7f2; }
+    .brand { text-align: center; font-size: 1rem; font-weight: 500; background: linear-gradient(120deg,#b0f3e8,#5ee0d0); -webkit-background-clip: text; background-clip: text; color: transparent; margin-bottom: 1rem; }
+    .badge { text-align: center; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 2px; color: #7bd5e8; background: rgba(45,212,191,0.12); display: inline-block; width: auto; margin: 0 auto 1rem; padding: 0.2rem 1rem; border-radius: 3rem; }
+    .dropzone { background: rgba(0,0,0,0.35); border: 2px dashed rgba(45,212,191,0.5); border-radius: 2rem; padding: 1.5rem; text-align: center; cursor: pointer; margin-bottom: 1rem; color: #b8e2da; }
+    .images-list { max-height: 300px; overflow-y: auto; margin: 1rem 0; background: rgba(0,0,0,0.2); border-radius: 1.5rem; padding: 0.5rem; }
+    .image-item { display: flex; align-items: center; gap: 1rem; background: rgba(20,35,40,0.6); margin: 0.5rem 0; padding: 0.5rem 1rem; border-radius: 2rem; color: #d4f3ed; }
+    .image-item img { width: 50px; height: 50px; object-fit: cover; border-radius: 1rem; }
+    .paper-settings { background: rgba(0,0,0,0.3); border-radius: 2rem; padding: 0.8rem 1rem; margin: 1rem 0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; color: #cbece6; }
+    .convert-btn { background: #1A8C7A; width: 100%; padding: 0.9rem; border-radius: 3rem; font-size: 1rem; font-weight: 600; color: white; cursor: pointer; margin: 0.5rem 0; border: none; }
+    .footer-note { text-align: center; font-size: 0.6rem; opacity: 0.5; margin-top: 1rem; color: #8db3c0; }
+  </style>
+</head>
+<body>
+<div class="glass-card">
+  <a href="index.html" class="home-link">← ホームに戻る</a>
+  <div class="brand">✦ NOVATOOLS ✦</div>
+  <div class="badge">📄 JPG/PNG → PDF変換</div>
+  <div class="dropzone" id="dropzone"><p>🖼️ 画像をクリックまたはドロップ</p><p class="small">複数選択可 (JPG, PNG) | ドラッグで並び替え</p><input type="file" id="fileInput" accept="image/jpeg,image/png" multiple style="display:none;"></div>
+  <div id="imagesContainer" class="images-list"><div class="empty-state">📭 画像がありません</div></div>
+  <div class="paper-settings"><span>📄 用紙サイズ / 向き</span><select id="pageSizeSelect"><option value="a4">A4 縦</option><option value="a4-landscape">A4 横</option><option value="letter">レター 縦</option><option value="letter-landscape">レター 横</option></select></div>
+  <button class="convert-btn" id="convertBtn" disabled>📑 PDFを生成・ダウンロード</button>
+  <div class="footer-note">画像はサーバーに送信されません</div>
+</div>
+<script>
+  let images=[];
+  function render(){const c=document.getElementById('imagesContainer'); if(images.length===0){c.innerHTML='<div class="empty-state">📭 画像がありません。上から追加してください</div>'; document.getElementById('convertBtn').disabled=true; return;} document.getElementById('convertBtn').disabled=false;
+    c.innerHTML=''; images.forEach((img,i)=>{let div=document.createElement('div');div.className='image-item'; let preview=document.createElement('img');preview.src=img.url; let nameSpan=document.createElement('span');nameSpan.innerText=img.name; let delBtn=document.createElement('button');delBtn.innerText='削除';delBtn.style.background='#1A8C7A';delBtn.style.border='none';delBtn.style.padding='0.2rem 0.8rem';delBtn.style.borderRadius='2rem';delBtn.style.color='white';delBtn.onclick=()=>{URL.revokeObjectURL(images[i].url); images.splice(i,1); render();}; div.appendChild(preview); div.appendChild(nameSpan); div.appendChild(delBtn); c.appendChild(div);});}
+  function addFiles(files){for(let f of files){if(!f.type.startsWith('image/'))continue; if(images.some(i=>i.name===f.name))continue; let url=URL.createObjectURL(f); images.push({file:f,url:url,name:f.name});} render();}
+  document.getElementById('dropzone').onclick=()=>document.getElementById('fileInput').click();
+  document.getElementById('dropzone').ondragover=e=>e.preventDefault();
+  document.getElementById('dropzone').ondrop=e=>{e.preventDefault(); addFiles(Array.from(e.dataTransfer.files));};
+  document.getElementById('fileInput').onchange=e=>{addFiles(Array.from(e.target.files)); e.target.value='';};
+  document.getElementById('convertBtn').onclick=async()=>{if(images.length===0)return; const {jsPDF}=window.jspdf; let size=document.getElementById('pageSizeSelect').value; let orient=size.includes('landscape')?'l':'p'; let format=size.replace('-landscape',''); let pdf=new jsPDF({orientation:orient,unit:'mm',format:format}); let w=pdf.internal.pageSize.getWidth(), h=pdf.internal.pageSize.getHeight();
+    for(let i=0;i<images.length;i++){let dataUrl=await new Promise(r=>{let rd=new FileReader(); rd.onload=e=>r(e.target.result); rd.readAsDataURL(images[i].file);}); let img=new Image(); await new Promise(r=>{img.onload=r; img.src=dataUrl;}); let iw=img.width, ih=img.height; let pw=w, ph=(ih/iw)*w; if(ph>h){ph=h; pw=(iw/ih)*h;} let x=(w-pw)/2, y=(h-ph)/2; if(i!==0)pdf.addPage(); pdf.addImage(dataUrl,'JPEG',x,y,pw,ph);}
+    pdf.save('converted.pdf');
+  };
+</script>
+</body>
+</html>
