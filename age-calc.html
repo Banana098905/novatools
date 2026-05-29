@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>年齢計算</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+    body { background: radial-gradient(ellipse at 30% 40%, #0C0F17, #020408); min-height:100vh; display:flex; align-items:center; justify-content:center; font-family:'Inter',sans-serif; padding:1rem; }
+    .glass-card { max-width:500px; width:100%; background:rgba(12,18,28,0.58); backdrop-filter:blur(16px); border-radius:3rem; padding:2rem 1.5rem; box-shadow:0 2px 8px rgba(0,0,0,0.1), 0 0 0 1px rgba(45,212,191,0.12); }
+    .home-link { display:inline-block; margin-bottom:1rem; background:rgba(45,212,191,0.15); color:#8dcfc3; text-decoration:none; padding:0.3rem 1rem; border-radius:2rem; font-size:0.8rem; transition:0.2s; }
+    .home-link:hover { background:#2DD4BF; color:#e0f7f2; }
+    .brand { text-align:center; font-size:1rem; font-weight:500; background:linear-gradient(120deg,#b0f3e8,#5ee0d0); -webkit-background-clip:text; background-clip:text; color:transparent; margin-bottom:1rem; }
+    .badge { text-align:center; font-size:0.75rem; text-transform:uppercase; letter-spacing:2px; color:#7bd5e8; background:rgba(45,212,191,0.12); display:inline-block; width:auto; margin:0 auto 1rem; padding:0.2rem 1rem; border-radius:3rem; }
+    label { font-size:0.7rem; color:#cbece6; display:block; margin-bottom:0.2rem; }
+    input { width:100%; background:rgba(20,30,40,0.7); border:1px solid rgba(45,212,191,0.4); border-radius:2rem; padding:0.7rem; color:#e0f7f2; margin-bottom:1rem; }
+    .result { background:rgba(0,0,0,0.35); border-radius:1.5rem; padding:1rem; text-align:center; margin-top:1rem; }
+    .age-value { font-size:2rem; font-weight:700; color:#e0f7f2; }
+    .footer-note { text-align:center; font-size:0.6rem; opacity:0.5; margin-top:1rem; color:#8db3c0; }
+  </style>
+</head>
+<body>
+<div class="glass-card">
+  <a href="index.html" class="home-link">← ホームに戻る</a>
+  <div class="brand">✦ NOVATOOLS ✦</div>
+  <div class="badge">📅 年齢計算</div>
+  <label>生年月日</label>
+  <input type="date" id="birthday">
+  <label>基準日（省略すると今日）</label>
+  <input type="date" id="baseDate">
+  <div class="result"><div class="age-value" id="age">--</div><div id="detail" style="font-size:0.8rem;"></div></div>
+  <div class="footer-note">満年齢を計算します</div>
+</div>
+<script>
+  function calcAge() {
+    let birth = new Date(document.getElementById('birthday').value);
+    let base = document.getElementById('baseDate').value ? new Date(document.getElementById('baseDate').value) : new Date();
+    if(isNaN(birth)) { document.getElementById('age').innerText = '--'; return; }
+    let age = base.getFullYear() - birth.getFullYear();
+    let m = base.getMonth() - birth.getMonth();
+    if(m < 0 || (m === 0 && base.getDate() < birth.getDate())) age--;
+    document.getElementById('age').innerText = age;
+    document.getElementById('detail').innerHTML = `生後${Math.floor((base-birth)/86400000)}日`;
+  }
+  document.getElementById('birthday').addEventListener('change', calcAge);
+  document.getElementById('baseDate').addEventListener('change', calcAge);
+  calcAge();
+</script>
+</body>
+</html>

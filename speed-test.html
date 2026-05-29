@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+  <title>NovaTools — 簡易速度テスト (通信速度チェック)</title>
+  <meta name="description" content="ダウンロード速度を簡易測定。回線速度の目安をチェック。無料・ログイン不要。">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    body { background: radial-gradient(ellipse at 30% 40%, #0C0F17, #020408); min-height: 100vh; display: flex; align-items: center; justify-content: center; font-family: 'Inter', 'Noto Sans JP', sans-serif; padding: 1rem; }
+    .glass-card { max-width: 560px; width: 100%; background: rgba(12,18,28,0.58); backdrop-filter: blur(16px); border-radius: 3rem; padding: 2rem 1.5rem 1.8rem; box-shadow: 0 2px 8px rgba(0,0,0,0.1), 0 0 0 1px rgba(45,212,191,0.12); }
+    .home-link { display: inline-block; margin-bottom: 1rem; background: rgba(45,212,191,0.15); color: #8dcfc3; text-decoration: none; padding: 0.3rem 1rem; border-radius: 2rem; font-size: 0.8rem; transition: 0.2s; }
+    .home-link:hover { background: #2DD4BF; color: #e0f7f2; }
+    .brand { text-align: center; font-size: 1rem; font-weight: 500; background: linear-gradient(120deg,#b0f3e8,#5ee0d0); -webkit-background-clip: text; background-clip: text; color: transparent; margin-bottom: 1rem; }
+    .badge { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 2px; color: #7bd5e8; background: rgba(45,212,191,0.12); display: inline-block; padding: 0.2rem 1rem; border-radius: 3rem; margin: 0 auto 1rem; text-align: center; width: fit-content; }
+    .result-area { background: rgba(0,0,0,0.35); border-radius: 2rem; padding: 1.5rem; text-align: center; margin: 1rem 0; }
+    .speed-value { font-size: 2.5rem; font-weight: 700; color: #e0f7f2; }
+    .speed-unit { font-size: 1rem; color: #b3f0e6; }
+    .status-text { font-size: 0.8rem; color: #cbece6; margin-top: 0.5rem; }
+    .test-btn { background: #1A8C7A; border: none; width: 100%; padding: 0.9rem; border-radius: 3rem; font-size: 1.1rem; font-weight: 600; color: white; cursor: pointer; margin: 0.5rem 0; }
+    .test-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .footer-note { text-align: center; font-size: 0.6rem; opacity: 0.5; margin-top: 1rem; color: #8db3c0; }
+  </style>
+</head>
+<body>
+<div class="glass-card">
+  <a href="index.html" class="home-link">← ホームに戻る</a>
+  <div class="brand">✦ NOVATOOLS ✦</div>
+  <div class="badge">📡 簡易速度テスト</div>
+  <div class="result-area">
+    <div class="speed-value" id="speedValue">--</div>
+    <div class="speed-unit" id="speedUnit">Mbps</div>
+    <div class="status-text" id="statusText">「測定開始」を押してください</div>
+  </div>
+  <button class="test-btn" id="testBtn">📊 測定開始</button>
+  <div class="footer-note">簡易的な目安です。正確な速度は専用ツールをご利用ください。</div>
+</div>
+<script>
+  const testBtn = document.getElementById('testBtn');
+  const speedValue = document.getElementById('speedValue');
+  const statusText = document.getElementById('statusText');
+  let isTesting = false;
+  async function measureSpeed() {
+    if(isTesting) return;
+    isTesting = true;
+    testBtn.disabled = true;
+    testBtn.textContent = '測定中...';
+    speedValue.innerText = '--';
+    statusText.innerText = '測定中、しばらくお待ちください...';
+    const testFile = 'https://speed.cloudflare.com/__down?bytes=5000000'; // 5MBファイル
+    const startTime = performance.now();
+    try {
+      const response = await fetch(testFile, { cache: 'no-store' });
+      const data = await response.arrayBuffer();
+      const endTime = performance.now();
+      const durationSec = (endTime - startTime) / 1000;
+      const bitsLoaded = data.byteLength * 8;
+      const speedMbps = (bitsLoaded / durationSec) / (1024 * 1024);
+      speedValue.innerText = speedMbps.toFixed(2);
+      statusText.innerText = `測定完了！ ${speedMbps.toFixed(2)} Mbps`;
+    } catch (error) {
+      speedValue.innerText = 'エラー';
+      statusText.innerText = '測定に失敗しました。ネットワークを確認してください。';
+    } finally {
+      isTesting = false;
+      testBtn.disabled = false;
+      testBtn.textContent = '📊 測定開始';
+    }
+  }
+  testBtn.addEventListener('click', measureSpeed);
+</script>
+</body>
+</html>

@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>正規表現テスター</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+    body { background: radial-gradient(ellipse at 30% 40%, #0C0F17, #020408); min-height:100vh; display:flex; align-items:center; justify-content:center; font-family:'Inter',sans-serif; padding:1rem; }
+    .glass-card { max-width:700px; width:100%; background:rgba(12,18,28,0.58); backdrop-filter:blur(16px); border-radius:3rem; padding:2rem 1.5rem; box-shadow:0 2px 8px rgba(0,0,0,0.1), 0 0 0 1px rgba(45,212,191,0.12); }
+    .home-link { display:inline-block; margin-bottom:1rem; background:rgba(45,212,191,0.15); color:#8dcfc3; text-decoration:none; padding:0.3rem 1rem; border-radius:2rem; font-size:0.8rem; transition:0.2s; }
+    .home-link:hover { background:#2DD4BF; color:#e0f7f2; }
+    .brand { text-align:center; font-size:1rem; font-weight:500; background:linear-gradient(120deg,#b0f3e8,#5ee0d0); -webkit-background-clip:text; background-clip:text; color:transparent; margin-bottom:1rem; }
+    .badge { text-align:center; font-size:0.75rem; text-transform:uppercase; letter-spacing:2px; color:#7bd5e8; background:rgba(45,212,191,0.12); display:inline-block; width:auto; margin:0 auto 1rem; padding:0.2rem 1rem; border-radius:3rem; }
+    label { font-size:0.7rem; color:#cbece6; display:block; margin-bottom:0.2rem; }
+    input, textarea { width:100%; background:rgba(20,30,40,0.7); border:1px solid rgba(45,212,191,0.4); border-radius:1.5rem; padding:0.7rem; color:#e0f7f2; margin-bottom:1rem; font-family:monospace; }
+    .result { background:rgba(0,0,0,0.35); border-radius:1.5rem; padding:1rem; white-space:pre-wrap; font-size:0.8rem; color:#e0f7f2; max-height:200px; overflow:auto; }
+    .footer-note { text-align:center; font-size:0.6rem; opacity:0.5; margin-top:1rem; color:#8db3c0; }
+  </style>
+</head>
+<body>
+<div class="glass-card">
+  <a href="index.html" class="home-link">← ホームに戻る</a>
+  <div class="brand">✦ NOVATOOLS ✦</div>
+  <div class="badge">🔍 正規表現テスター</div>
+  <label>正規表現</label>
+  <input type="text" id="regex" placeholder="例: [0-9]+">
+  <label>テスト文字列</label>
+  <textarea id="testText" rows="4">abc123def456</textarea>
+  <div class="result" id="matchResult">--</div>
+  <div class="footer-note">JavaScript 正規表現 (gフラグ対応)</div>
+</div>
+<script>
+  function test() {
+    const pattern = document.getElementById('regex').value;
+    const text = document.getElementById('testText').value;
+    if(!pattern) { document.getElementById('matchResult').innerHTML = '正規表現を入力してください'; return; }
+    try {
+      const re = new RegExp(pattern, 'g');
+      const matches = [...text.matchAll(re)];
+      if(matches.length===0) document.getElementById('matchResult').innerHTML = 'マッチしませんでした';
+      else document.getElementById('matchResult').innerHTML = matches.map(m => `🔹 ${m[0]} (位置: ${m.index})`).join('<br>');
+    } catch(e) { document.getElementById('matchResult').innerHTML = `エラー: ${e.message}`; }
+  }
+  document.getElementById('regex').addEventListener('input', test);
+  document.getElementById('testText').addEventListener('input', test);
+  test();
+</script>
+</body>
+</html>

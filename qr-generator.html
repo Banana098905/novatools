@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+  <title>NovaTools — QRコード生成 (無料・即時)</title>
+  <meta name="description" content="テキストまたはURLを入れるだけでQRコードを即生成。ダウンロードも自由。ログイン不要。">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600&family=Noto+Sans+JP:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    body { background: radial-gradient(ellipse at 30% 40%, #0C0F17, #020408); min-height: 100vh; display: flex; align-items: center; justify-content: center; font-family: 'Inter', 'Noto Sans JP', sans-serif; padding: 1rem; }
+    .glass-card { max-width: 560px; width: 100%; background: rgba(12,18,28,0.58); backdrop-filter: blur(16px); border-radius: 3rem; padding: 2rem 1.5rem 1.8rem; box-shadow: 0 2px 8px rgba(0,0,0,0.1), 0 0 0 1px rgba(45,212,191,0.12); }
+    .home-link { display: inline-block; margin-bottom: 1rem; background: rgba(45,212,191,0.15); color: #8dcfc3; text-decoration: none; padding: 0.3rem 1rem; border-radius: 2rem; font-size: 0.8rem; transition: 0.2s; }
+    .home-link:hover { background: #2DD4BF; color: #e0f7f2; }
+    .brand { text-align: center; font-size: 1rem; font-weight: 500; background: linear-gradient(120deg,#b0f3e8,#5ee0d0); -webkit-background-clip: text; background-clip: text; color: transparent; margin-bottom: 1rem; }
+    .label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 2px; color: #7bd5e8; background: rgba(45,212,191,0.12); display: inline-block; padding: 0.2rem 1rem; border-radius: 3rem; margin-bottom: 1.2rem; text-align: center; width: auto; margin-left: auto; margin-right: auto; }
+    .input-group input { width: 100%; background: rgba(20,30,40,0.7); border: 1px solid rgba(45,212,191,0.4); border-radius: 3rem; padding: 1rem 1.2rem; font-size: 1rem; color: #e0f7f2; text-align: center; margin: 1rem 0; }
+    .qr-container { background: rgba(255,255,255,0.95); padding: 1rem; border-radius: 2rem; display: inline-block; margin: 0.8rem auto; text-align: center; width: auto; }
+    #qrcode { display: flex; justify-content: center; align-items: center; }
+    #qrcode img, #qrcode canvas { width: 180px; height: 180px; border-radius: 1rem; }
+    .btn-group { display: flex; justify-content: center; gap: 1rem; margin: 1.8rem 0 1rem; flex-wrap: wrap; }
+    .btn { border: none; padding: 0.7rem 1.5rem; border-radius: 3rem; font-weight: 600; cursor: pointer; transition: 0.2s; }
+    .btn-primary { background: #1A8C7A; color: white; }
+    .btn-primary:hover { background: #2BBBA5; transform: translateY(-2px); }
+    .btn-secondary { background: rgba(30,40,50,0.8); color: #D1F0EC; border: 1px solid rgba(45,212,191,0.3); }
+    .btn-secondary:hover { background: #2d5f66; transform: translateY(-1px); color: white; }
+    .hint { text-align: center; font-size: 0.7rem; color: #8dbdb3; margin-top: 1rem; border-top: 1px solid rgba(69,160,145,0.2); padding-top: 1rem; }
+    .footer-note { text-align: center; font-size: 0.6rem; opacity: 0.5; margin-top: 0.8rem; color: #8db3c0; }
+    @media (max-width: 500px) { #qrcode img, #qrcode canvas { width: 150px; height: 150px; } .btn { padding: 0.6rem 1.2rem; } }
+  </style>
+</head>
+<body>
+<div class="glass-card">
+  <a href="index.html" class="home-link">← ホームに戻る</a>
+  <div class="brand">✦ NOVATOOLS ✦</div>
+  <div class="label">📱 テキスト or URL → QRコード</div>
+  <div class="input-group"><input type="text" id="qrTextInput" placeholder="例: https://novatools.example" value="https://novatools.example"></div>
+  <div style="text-align:center;"><div id="qrcode" class="qr-container"></div></div>
+  <div class="btn-group"><button class="btn btn-primary" id="generateBtn">✨ 生成する</button><button class="btn btn-secondary" id="downloadBtn">⬇️ PNG保存</button></div>
+  <div class="hint">💡 文字を変えたら「生成する」を押してね</div>
+  <div class="footer-note">無料・ログイン不要 | 商用・SNSでも自由に使えます</div>
+</div>
+<script>
+  let currentCanvas=null;
+  const qrDiv=document.getElementById('qrcode');
+  function generateQR(text){
+    if(!text.trim()) text="✨入力してください✨";
+    while(qrDiv.firstChild) qrDiv.removeChild(qrDiv.firstChild);
+    // 黒(#000000)を使わない → 濃い青緑 (#0a3a3a)
+    new QRCode(qrDiv,{text:text,width:200,height:200,colorDark:"#0a3a3a",colorLight:"#ffffff",correctLevel:QRCode.CorrectLevel.M});
+    setTimeout(()=>{const img=qrDiv.querySelector('img'); if(img){let c=document.createElement('canvas'); c.width=img.width; c.height=img.height; c.getContext('2d').drawImage(img,0,0,img.width,img.height); currentCanvas=c;}},50);
+  }
+  function downloadQR(){if(!currentCanvas){alert("先に生成してください");return;}const a=document.createElement('a');a.download='qrcode.png';a.href=currentCanvas.toDataURL('image/png');a.click();}
+  const input=document.getElementById('qrTextInput');
+  document.getElementById('generateBtn').addEventListener('click',()=>generateQR(input.value));
+  document.getElementById('downloadBtn').addEventListener('click',downloadQR);
+  generateQR(input.value);
+</script>
+</body>
+</html>

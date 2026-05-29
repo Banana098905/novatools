@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>URL エンコード/デコード</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+    body { background: radial-gradient(ellipse at 30% 40%, #0C0F17, #020408); min-height:100vh; display:flex; align-items:center; justify-content:center; font-family:'Inter',sans-serif; padding:1rem; }
+    .glass-card { max-width:700px; width:100%; background:rgba(12,18,28,0.58); backdrop-filter:blur(16px); border-radius:3rem; padding:2rem 1.5rem; box-shadow:0 2px 8px rgba(0,0,0,0.1), 0 0 0 1px rgba(45,212,191,0.12); }
+    .home-link { display:inline-block; margin-bottom:1rem; background:rgba(45,212,191,0.15); color:#8dcfc3; text-decoration:none; padding:0.3rem 1rem; border-radius:2rem; font-size:0.8rem; transition:0.2s; }
+    .home-link:hover { background:#2DD4BF; color:#e0f7f2; }
+    .brand { text-align:center; font-size:1rem; font-weight:500; background:linear-gradient(120deg,#b0f3e8,#5ee0d0); -webkit-background-clip:text; background-clip:text; color:transparent; margin-bottom:1rem; }
+    .badge { text-align:center; font-size:0.75rem; text-transform:uppercase; letter-spacing:2px; color:#7bd5e8; background:rgba(45,212,191,0.12); display:inline-block; width:auto; margin:0 auto 1rem; padding:0.2rem 1rem; border-radius:3rem; }
+    textarea, input { width:100%; background:rgba(20,30,40,0.7); border:1px solid rgba(45,212,191,0.4); border-radius:1.5rem; padding:0.8rem; color:#e0f7f2; margin-bottom:0.5rem; font-family:monospace; }
+    .btn-group { display:flex; gap:0.8rem; justify-content:center; margin:1rem 0; }
+    button { background:#1A8C7A; border:none; padding:0.5rem 1.2rem; border-radius:2rem; color:white; cursor:pointer; font-weight:600; transition:0.2s; }
+    button:hover { background:#2BBBA5; transform:translateY(-2px); }
+    .footer-note { text-align:center; font-size:0.6rem; opacity:0.5; margin-top:1rem; color:#8db3c0; }
+  </style>
+</head>
+<body>
+<div class="glass-card">
+  <a href="index.html" class="home-link">← ホームに戻る</a>
+  <div class="brand">✦ NOVATOOLS ✦</div>
+  <div class="badge">🔗 URL エンコード/デコード</div>
+  <textarea id="inputText" rows="3" placeholder="https://example.com?name=日本語"></textarea>
+  <div class="btn-group"><button id="encodeBtn">🔒 エンコード</button><button id="decodeBtn">🔓 デコード</button></div>
+  <div class="badge" style="margin-top:0.5rem;">結果</div>
+  <textarea id="outputText" rows="3" readonly></textarea>
+  <div class="footer-note">URLエンコード（パーセントエンコーディング）</div>
+</div>
+<script>
+  const input = document.getElementById('inputText');
+  const output = document.getElementById('outputText');
+  document.getElementById('encodeBtn').onclick = () => { output.value = encodeURIComponent(input.value); };
+  document.getElementById('decodeBtn').onclick = () => { output.value = decodeURIComponent(input.value); };
+</script>
+</body>
+</html>

@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+  <title>NovaTools — ポモドーロタイマー (集中・休憩タイマー)</title>
+  <meta name="description" content="ポモドーロテクニックに基づいた集中タイマー。勉強ログ・フルスクリーン対応。無料・ログイン不要。">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    body { background: radial-gradient(ellipse at 30% 40%, #0C0F17, #020408); min-height: 100vh; display: flex; align-items: center; justify-content: center; font-family: 'Inter', 'Noto Sans JP', sans-serif; padding: 1rem; }
+    .glass-card { max-width: 600px; width: 100%; background: rgba(12,18,28,0.58); backdrop-filter: blur(16px); border-radius: 3rem; padding: 2rem 1.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.1), 0 0 0 1px rgba(45,212,191,0.12); }
+    .home-link { display: inline-block; margin-bottom: 1rem; background: rgba(45,212,191,0.15); color: #8dcfc3; text-decoration: none; padding: 0.3rem 1rem; border-radius: 2rem; font-size: 0.8rem; transition: 0.2s; }
+    .home-link:hover { background: #2DD4BF; color: #0a1a1f; }
+    .brand { text-align: center; font-size: 1rem; font-weight: 500; background: linear-gradient(120deg,#b0f3e8,#5ee0d0); -webkit-background-clip: text; background-clip: text; color: transparent; margin-bottom: 1rem; }
+    .timer-display { font-size: 4rem; font-weight: 700; text-align: center; letter-spacing: 4px; color: #e0f7f2; margin: 1rem 0; font-family: monospace; }
+    .phase-label { text-align: center; background: rgba(45,212,191,0.2); display: inline-block; width: auto; margin: 0 auto 1rem; padding: 0.2rem 1rem; border-radius: 2rem; font-size: 0.8rem; color: #b3f0e6; }
+    .btn-group { display: flex; justify-content: center; gap: 0.8rem; margin: 1rem 0; flex-wrap: wrap; }
+    button { background: #1A8C7A; border: none; padding: 0.6rem 1.2rem; border-radius: 3rem; color: white; font-weight: 600; cursor: pointer; transition: 0.2s; }
+    button:hover { transform: translateY(-2px); background: #2BBBA5; }
+    .settings { display: flex; gap: 1rem; justify-content: center; margin: 1rem 0; flex-wrap: wrap; }
+    .setting-item { background: rgba(0,0,0,0.3); padding: 0.5rem; border-radius: 2rem; text-align: center; color: #cbece6; font-size: 0.7rem; }
+    .setting-item input { width: 70px; background: #1f3e38; border: none; border-radius: 2rem; padding: 0.3rem; color: white; text-align: center; }
+    .extra-controls { display: flex; flex-wrap: wrap; gap: 0.5rem; justify-content: center; margin: 1rem 0; }
+    .extra-btn { background: #2d5f66; border: none; padding: 0.4rem 0.8rem; border-radius: 2rem; color: white; font-size: 0.7rem; cursor: pointer; }
+    .log-section { margin-top: 1.5rem; border-top: 1px solid rgba(45,212,191,0.2); padding-top: 1rem; }
+    .log-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; font-size: 0.7rem; color: #b3f0e6; }
+    .log-list { max-height: 120px; overflow-y: auto; background: rgba(0,0,0,0.2); border-radius: 1rem; padding: 0.3rem; }
+    .log-item { background: rgba(45,212,191,0.1); border-radius: 2rem; padding: 0.2rem 0.6rem; margin: 0.2rem 0; font-size: 0.7rem; display: flex; justify-content: space-between; }
+    .clear-log-btn { background: none; border: none; color: #ff9b7a; cursor: pointer; }
+    .footer-note { font-size: 0.6rem; text-align: center; opacity: 0.5; margin-top: 1rem; color: #8db3c0; }
+    @media (max-width: 500px) { .timer-display { font-size: 3rem; } }
+  </style>
+</head>
+<body>
+<div class="glass-card">
+  <a href="index.html" class="home-link">← ホームに戻る</a>
+  <div class="brand">✦ NOVATOOLS ✦</div>
+  <div class="phase-label" id="phaseLabel">📘 集中フェーズ</div>
+  <div class="timer-display" id="timerDisplay">25:00</div>
+  <div class="btn-group">
+    <button id="startBtn">▶ スタート</button>
+    <button id="pauseBtn">⏸ ポーズ</button>
+    <button id="resetBtn">↺ リセット</button>
+  </div>
+  <div class="settings">
+    <div class="setting-item"><label>📘 集中(分)</label><input type="number" id="workMins" value="25" min="1" max="99"></div>
+    <div class="setting-item"><label>🍵 休憩(分)</label><input type="number" id="breakMins" value="5" min="1" max="30"></div>
+  </div>
+  <div class="extra-controls">
+    <button class="extra-btn" id="fullscreenBtn">🖥️ 全画面</button>
+  </div>
+
+  <div class="log-section">
+    <div class="log-header"><span>📋 勉強ログ (完了したポモドーロ)</span><button id="clearLogsBtn" style="background:none; border:none; color:#ff9b7a; cursor:pointer;">すべて消去</button></div>
+    <div class="log-list" id="logList"></div>
+  </div>
+  <div class="footer-note">全画面対応 | タイマー終了時に通知 | 集中時間・休憩時間は自動保存</div>
+</div>
+
+<script>
+  // ---------- タイマー関連 ----------
+  let workMin = 25, breakMin = 5;
+  let currentSeconds = workMin * 60;
+  let isWorkPhase = true;
+  let isRunning = false;
+  let timerInterval = null;
+
+  // DOM 要素
+  const workInput = document.getElementById('workMins');
+  const breakInput = document.getElementById('breakMins');
+  const timerDisplay = document.getElementById('timerDisplay');
+  const phaseLabel = document.getElementById('phaseLabel');
+  const startBtn = document.getElementById('startBtn');
+  const pauseBtn = document.getElementById('pauseBtn');
+  const resetBtn = document.getElementById('resetBtn');
+  const logListDiv = document.getElementById('logList');
+  const clearLogsBtn = document.getElementById('clearLogsBtn');
+  const fullscreenBtn = document.getElementById('fullscreenBtn');
+
+  // 勉強ログ (localStorage)
+  let studyLogs = [];
+
+  // 設定の永続化キー
+  const STORAGE_KEYS = {
+    work: 'nova_pomo_work',
+    break: 'nova_pomo_break',
+    logs: 'nova_pomo_logs'
+  };
+
+  // ---------- 初期化 & 設定読み込み ----------
+  function loadSettings() {
+    const savedWork = localStorage.getItem(STORAGE_KEYS.work);
+    if (savedWork) workMin = parseInt(savedWork);
+    const savedBreak = localStorage.getItem(STORAGE_KEYS.break);
+    if (savedBreak) breakMin = parseInt(savedBreak);
+    workInput.value = workMin;
+    breakInput.value = breakMin;
+  }
+  function saveWorkBreak() {
+    localStorage.setItem(STORAGE_KEYS.work, workMin);
+    localStorage.setItem(STORAGE_KEYS.break, breakMin);
+  }
+
+  // タイマー表示更新
+  function updateDisplay() {
+    const mins = Math.floor(currentSeconds / 60);
+    const secs = currentSeconds % 60;
+    timerDisplay.textContent = `${mins.toString().padStart(2,'0')}:${secs.toString().padStart(2,'0')}`;
+  }
+  function updatePhaseLabel() {
+    phaseLabel.innerHTML = isWorkPhase ? '📘 集中フェーズ' : '🍵 休憩フェーズ';
+  }
+  // フェーズ切り替え（完了時の処理含む）
+  function switchPhase() {
+    if (isWorkPhase) {
+      // 集中フェーズ完了 → 勉強ログに追加
+      addStudyLog(workMin);
+      // デスクトップ通知
+      notify('集中お疲れ様でした！', '休憩時間です。リラックスしましょう。');
+    } else {
+      notify('休憩終了', '次の集中を始めましょう！');
+    }
+    isWorkPhase = !isWorkPhase;
+    currentSeconds = (isWorkPhase ? workMin : breakMin) * 60;
+    updatePhaseLabel();
+    updateDisplay();
+    // タイマーは自動停止するので、停止状態に
+    if (timerInterval) clearInterval(timerInterval);
+    timerInterval = null;
+    isRunning = false;
+  }
+  // 通知 (許可されていれば)
+  function notify(title, body) {
+    if (Notification.permission === 'granted') {
+      new Notification(title, { body });
+    }
+  }
+  // タイマーチック
+  function tick() {
+    if (currentSeconds <= 0) {
+      switchPhase();
+      return;
+    }
+    currentSeconds--;
+    updateDisplay();
+  }
+  function startTimer() {
+    if (isRunning) return;
+    isRunning = true;
+    if (timerInterval) clearInterval(timerInterval);
+    timerInterval = setInterval(() => {
+      tick();
+      if (!isRunning && timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+      }
+    }, 1000);
+  }
+  function pauseTimer() {
+    if (!isRunning) return;
+    isRunning = false;
+    if (timerInterval) clearInterval(timerInterval);
+    timerInterval = null;
+  }
+  function resetTimer() {
+    pauseTimer();
+    currentSeconds = (isWorkPhase ? workMin : breakMin) * 60;
+    updateDisplay();
+  }
+
+  // 勉強ログ処理
+  function addStudyLog(minutes) {
+    const now = new Date();
+    const timeStr = `${now.getMonth()+1}/${now.getDate()} ${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}`;
+    studyLogs.unshift({ date: timeStr, minutes, timestamp: now.getTime() });
+    if (studyLogs.length > 30) studyLogs.pop();
+    localStorage.setItem(STORAGE_KEYS.logs, JSON.stringify(studyLogs));
+    renderLogs();
+  }
+  function renderLogs() {
+    logListDiv.innerHTML = '';
+    if (studyLogs.length === 0) {
+      logListDiv.innerHTML = '<div style="color:#8db3c0; text-align:center;">まだログがありません</div>';
+      return;
+    }
+    studyLogs.forEach((log, idx) => {
+      const div = document.createElement('div');
+      div.className = 'log-item';
+      div.innerHTML = `<span>📖 ${log.date} — ${log.minutes}分 集中完了</span><button class="clear-log-btn" data-idx="${idx}">🗑️</button>`;
+      logListDiv.appendChild(div);
+    });
+    document.querySelectorAll('.clear-log-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const idx = parseInt(btn.getAttribute('data-idx'));
+        studyLogs.splice(idx, 1);
+        localStorage.setItem(STORAGE_KEYS.logs, JSON.stringify(studyLogs));
+        renderLogs();
+      });
+    });
+  }
+  function clearAllLogs() {
+    studyLogs = [];
+    localStorage.setItem(STORAGE_KEYS.logs, JSON.stringify(studyLogs));
+    renderLogs();
+  }
+
+  // ---------- フルスクリーン ----------
+  function toggleFullscreen() {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(err => console.warn(err));
+    } else {
+      document.exitFullscreen();
+    }
+  }
+
+  // ---------- ユーザー設定変更イベント ----------
+  function applyUserSettings() {
+    let newWork = parseInt(workInput.value);
+    let newBreak = parseInt(breakInput.value);
+    if (isNaN(newWork)) newWork = 25;
+    if (isNaN(newBreak)) newBreak = 5;
+    newWork = Math.min(99, Math.max(1, newWork));
+    newBreak = Math.min(30, Math.max(1, newBreak));
+    workMin = newWork;
+    breakMin = newBreak;
+    workInput.value = workMin;
+    breakInput.value = breakMin;
+    saveWorkBreak();
+    if (!isRunning) {
+      if (isWorkPhase) currentSeconds = workMin * 60;
+      else currentSeconds = breakMin * 60;
+      updateDisplay();
+    }
+  }
+
+  // ---------- イベント登録 ----------
+  startBtn.addEventListener('click', startTimer);
+  pauseBtn.addEventListener('click', pauseTimer);
+  resetBtn.addEventListener('click', resetTimer);
+  workInput.addEventListener('change', applyUserSettings);
+  breakInput.addEventListener('change', applyUserSettings);
+  fullscreenBtn.addEventListener('click', toggleFullscreen);
+  clearLogsBtn.addEventListener('click', clearAllLogs);
+
+  // ---------- 初期ロード ----------
+  function loadLogs() {
+    const savedLogs = localStorage.getItem(STORAGE_KEYS.logs);
+    if (savedLogs) {
+      try { studyLogs = JSON.parse(savedLogs); } catch(e) { studyLogs = []; }
+    } else {
+      studyLogs = [];
+    }
+    renderLogs();
+  }
+  // 通知許可をリクエスト
+  if (Notification.permission === 'default') {
+    Notification.requestPermission();
+  }
+  loadSettings();
+  loadLogs();
+  applyUserSettings(); // 初期表示合わせ
+  resetTimer();
+</script>
+</body>
+</html>
